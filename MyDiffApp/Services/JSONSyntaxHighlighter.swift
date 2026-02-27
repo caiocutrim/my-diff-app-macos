@@ -9,39 +9,29 @@ import SwiftUI
 import AppKit
 
 enum SyntaxTheme {
-    case dracula
+    case material
     case system
 }
 
 class JSONSyntaxHighlighter {
 
     /// Aplica syntax highlighting em JSON completo (para text editors)
-    static func highlightJSON(_ text: String, theme: SyntaxTheme = .dracula, fontSize: CGFloat = 13) -> NSAttributedString {
+    static func highlightJSON(_ text: String, theme: SyntaxTheme = .material, fontSize: CGFloat = 13) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: text)
 
-        // Definir cores baseado no tema
         let (keyColor, stringColor, numberColor, boolNullColor, punctuationColor, textColor) = getThemeColors(theme)
-
-        // Fonte monoespaçada com o tamanho especificado
         let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
 
-        // Aplicar fonte e cor padrão para todo o texto
         attributedString.addAttributes([
             .foregroundColor: textColor,
             .font: font
         ], range: NSRange(location: 0, length: attributedString.length))
 
-        // Padrões de regex para JSON
         let patterns: [(pattern: String, color: NSColor)] = [
-            // Chaves (string seguida de :)
             ("\"[^\"]*\"\\s*:", keyColor),
-            // Strings (valores)
             ("\"[^\"]*\"", stringColor),
-            // Números
             ("-?\\d+\\.?\\d*([eE][+-]?\\d+)?", numberColor),
-            // Booleanos e null
             ("\\b(true|false|null)\\b", boolNullColor),
-            // Pontuação
             ("[{}\\[\\],:]", punctuationColor)
         ]
 
@@ -67,35 +57,29 @@ class JSONSyntaxHighlighter {
     }
 
     /// Aplica syntax highlighting em um segmento de texto JSON (para diff view)
-    static func highlight(text: String, diffType: DiffSegmentType, theme: SyntaxTheme = .dracula, fontSize: CGFloat = 13) -> AttributedString {
+    static func highlight(text: String, diffType: DiffSegmentType, theme: SyntaxTheme = .material, fontSize: CGFloat = 13, inlineHighlight: Bool = true) -> AttributedString {
         var attributed = AttributedString(text)
 
-        // Aplicar tamanho de fonte
         attributed.font = Font.system(size: fontSize, design: .monospaced)
 
-        // Cores baseadas no tema
         let (keyColor, stringColor, numberColor, boolNullColor, punctuationColor, _) = getThemeColorsSwiftUI(theme)
 
-        // Background colors baseado no tipo de diff
-        let backgroundColor: Color? = {
-            switch diffType {
-            case .unchanged:
-                return nil
-            case .added:
-                return theme == .dracula ? DraculaTheme.diffAddedHighlight : Color.green.opacity(0.3)
-            case .removed:
-                return theme == .dracula ? DraculaTheme.diffRemovedHighlight : Color.red.opacity(0.3)
-            case .modified:
-                return theme == .dracula ? DraculaTheme.diffModifiedHighlight : Color.yellow.opacity(0.3)
+        // Only apply inline segment backgrounds when inlineHighlight is enabled
+        // (i.e. for modified lines only — added/removed lines use the row background instead)
+        if inlineHighlight {
+            let backgroundColor: Color? = {
+                switch diffType {
+                case .unchanged: return nil
+                case .added: return AppTheme.addHighlight
+                case .removed: return AppTheme.delHighlight
+                case .modified: return AppTheme.modHighlight
+                }
+            }()
+            if let bgColor = backgroundColor {
+                attributed.backgroundColor = bgColor
             }
-        }()
-
-        // Aplicar background se necessário
-        if let bgColor = backgroundColor {
-            attributed.backgroundColor = bgColor
         }
 
-        // Padrões de regex para JSON
         let patterns: [(pattern: String, color: Color)] = [
             ("\"[^\"]*\"\\s*:", keyColor),
             ("\"[^\"]*\"", stringColor),
@@ -123,11 +107,11 @@ class JSONSyntaxHighlighter {
     }
 
     /// Cria um AttributedString para um array de CharacterDiff com syntax highlighting
-    static func highlightSegments(_ segments: [CharacterDiff], theme: SyntaxTheme = .dracula, fontSize: CGFloat = 13) -> AttributedString {
+    static func highlightSegments(_ segments: [CharacterDiff], theme: SyntaxTheme = .material, fontSize: CGFloat = 13, inlineHighlight: Bool = true) -> AttributedString {
         var result = AttributedString()
 
         for segment in segments {
-            let highlighted = highlight(text: segment.text, diffType: segment.type, theme: theme, fontSize: fontSize)
+            let highlighted = highlight(text: segment.text, diffType: segment.type, theme: theme, fontSize: fontSize, inlineHighlight: inlineHighlight)
             result.append(highlighted)
         }
 
@@ -145,14 +129,14 @@ class JSONSyntaxHighlighter {
         text: NSColor
     ) {
         switch theme {
-        case .dracula:
+        case .material:
             return (
-                key: NSColor(DraculaTheme.jsonKey),
-                string: NSColor(DraculaTheme.jsonString),
-                number: NSColor(DraculaTheme.jsonNumber),
-                boolNull: NSColor(DraculaTheme.jsonBoolean),
-                punctuation: NSColor(DraculaTheme.jsonPunctuation),
-                text: NSColor(DraculaTheme.foreground)
+                key: NSColor(AppTheme.jsonKey),
+                string: NSColor(AppTheme.jsonString),
+                number: NSColor(AppTheme.jsonNumber),
+                boolNull: NSColor(AppTheme.jsonBoolean),
+                punctuation: NSColor(AppTheme.jsonPunctuation),
+                text: NSColor(AppTheme.text)
             )
         case .system:
             return (
@@ -175,14 +159,14 @@ class JSONSyntaxHighlighter {
         text: Color
     ) {
         switch theme {
-        case .dracula:
+        case .material:
             return (
-                key: DraculaTheme.jsonKey,
-                string: DraculaTheme.jsonString,
-                number: DraculaTheme.jsonNumber,
-                boolNull: DraculaTheme.jsonBoolean,
-                punctuation: DraculaTheme.jsonPunctuation,
-                text: DraculaTheme.foreground
+                key: AppTheme.jsonKey,
+                string: AppTheme.jsonString,
+                number: AppTheme.jsonNumber,
+                boolNull: AppTheme.jsonBoolean,
+                punctuation: AppTheme.jsonPunctuation,
+                text: AppTheme.text
             )
         case .system:
             return (

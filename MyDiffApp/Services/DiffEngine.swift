@@ -96,4 +96,67 @@ class DiffEngine {
 
         return detailedLines
     }
+
+    /// Extrai um resumo das diferenças identificando campos JSON alterados
+    static func extractSummary(from lines: [DetailedDiffLine]) -> [DiffSummaryItem] {
+        var items: [DiffSummaryItem] = []
+
+        for line in lines where line.type != .equal {
+            let leftText = line.leftSegments.map { $0.text }.joined().trimmingCharacters(in: .whitespaces)
+            let rightText = line.rightSegments.map { $0.text }.joined().trimmingCharacters(in: .whitespaces)
+
+            // Extrair nome do campo e valor de uma linha JSON tipo "key": value
+            let (leftKey, leftVal) = parseJSONLine(leftText)
+            let (rightKey, rightVal) = parseJSONLine(rightText)
+
+            let fieldName = leftKey ?? rightKey ?? leftText.prefix(40).description
+
+            // Pular linhas que são apenas chaves/colchetes
+            if fieldName.isEmpty || fieldName == "{" || fieldName == "}" || fieldName == "[" || fieldName == "]" {
+                continue
+            }
+
+            let changeType: DiffChangeType
+            switch line.type {
+            case .added:
+                changeType = .added
+            case .removed:
+                changeType = .removed
+            default:
+                changeType = .modified
+            }
+
+            let item = DiffSummaryItem(
+                fieldName: fieldName,
+                oldValue: leftVal ?? (leftText.isEmpty ? nil : leftText),
+                newValue: rightVal ?? (rightText.isEmpty ? nil : rightText),
+                changeType: changeType
+            )
+            items.append(item)
+        }
+
+        return items
+    }
+
+    /// Extrai chave e valor de uma linha JSON formatada como `"key": value`
+    private static func parseJSONLine(_ line: String) -> (key: String?, value: String?) {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return (nil, nil) }
+
+        // Match "key": value pattern
+        let pattern = #"^"([^"]+)"\s*:\s*(.+?)[\s,]*$"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
+              match.numberOfRanges >= 3 else {
+            return (nil, nil)
+        }
+
+        let keyRange = Range(match.range(at: 1), in: trimmed)
+        let valRange = Range(match.range(at: 2), in: trimmed)
+
+        let key = keyRange.map { String(trimmed[$0]) }
+        let value = valRange.map { String(trimmed[$0]) }
+
+        return (key, value)
+    }
 }

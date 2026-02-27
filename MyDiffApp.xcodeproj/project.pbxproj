@@ -20,9 +20,12 @@
 		A10000001000000000000011 /* JSONSyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000011 /* JSONSyntaxHighlighter.swift */; };
 		A10000001000000000000012 /* DetailedDiffPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000012 /* DetailedDiffPaneView.swift */; };
 		A10000001000000000000013 /* DetailedDiffResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000013 /* DetailedDiffResultView.swift */; };
-		A10000001000000000000014 /* DraculaTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000014 /* DraculaTheme.swift */; };
+		A10000001000000000000014 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000014 /* AppTheme.swift */; };
 		A10000001000000000000015 /* JSONTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000015 /* JSONTextEditor.swift */; };
 		A10000001000000000000016 /* FontSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000016 /* FontSettings.swift */; };
+		A10000001000000000000017 /* DiffSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000017 /* DiffSummary.swift */; };
+		A10000001000000000000018 /* DiffSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000018 /* DiffSummaryView.swift */; };
+		A10000001000000000000019 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000019 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,9 +43,12 @@
 		A20000001000000000000011 /* JSONSyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONSyntaxHighlighter.swift; sourceTree = "<group>"; };
 		A20000001000000000000012 /* DetailedDiffPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailedDiffPaneView.swift; sourceTree = "<group>"; };
 		A20000001000000000000013 /* DetailedDiffResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailedDiffResultView.swift; sourceTree = "<group>"; };
-		A20000001000000000000014 /* DraculaTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraculaTheme.swift; sourceTree = "<group>"; };
+		A20000001000000000000014 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		A20000001000000000000015 /* JSONTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONTextEditor.swift; sourceTree = "<group>"; };
 		A20000001000000000000016 /* FontSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontSettings.swift; sourceTree = "<group>"; };
+		A20000001000000000000017 /* DiffSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffSummary.swift; sourceTree = "<group>"; };
+		A20000001000000000000018 /* DiffSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffSummaryView.swift; sourceTree = "<group>"; };
+		A20000001000000000000019 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000001000000000000001 /* MyDiffApp.swift */,
+				A20000001000000000000019 /* Assets.xcassets */,
 				A50000001000000000000004 /* Views */,
 				A50000001000000000000005 /* Models */,
 				A50000001000000000000006 /* Services */,
@@ -93,6 +100,7 @@
 				A20000001000000000000012 /* DetailedDiffPaneView.swift */,
 				A20000001000000000000013 /* DetailedDiffResultView.swift */,
 				A20000001000000000000015 /* JSONTextEditor.swift */,
+				A20000001000000000000018 /* DiffSummaryView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -103,6 +111,7 @@
 				A20000001000000000000005 /* DiffLine.swift */,
 				A20000001000000000000006 /* DiffResult.swift */,
 				A20000001000000000000009 /* CharacterDiff.swift */,
+				A20000001000000000000017 /* DiffSummary.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -121,7 +130,7 @@
 		A50000001000000000000007 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				A20000001000000000000014 /* DraculaTheme.swift */,
+				A20000001000000000000014 /* AppTheme.swift */,
 				A20000001000000000000016 /* FontSettings.swift */,
 			);
 			path = Utilities;
@@ -185,6 +194,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000001000000000000019 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -208,9 +218,11 @@
 				A10000001000000000000011 /* JSONSyntaxHighlighter.swift in Sources */,
 				A10000001000000000000012 /* DetailedDiffPaneView.swift in Sources */,
 				A10000001000000000000013 /* DetailedDiffResultView.swift in Sources */,
-				A10000001000000000000014 /* DraculaTheme.swift in Sources */,
+				A10000001000000000000014 /* AppTheme.swift in Sources */,
 				A10000001000000000000015 /* JSONTextEditor.swift in Sources */,
 				A10000001000000000000016 /* FontSettings.swift in Sources */,
+				A10000001000000000000017 /* DiffSummary.swift in Sources */,
+				A10000001000000000000018 /* DiffSummaryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

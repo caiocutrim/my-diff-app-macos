@@ -7,31 +7,31 @@
 
 import SwiftUI
 
+/// Legacy line-level diff view (kept for compatibility, not used in main flow)
 struct DiffResultView: View {
     let diffResult: DiffResult
     @State private var scrollPosition: Int? = nil
 
     var body: some View {
         VStack(spacing: 0) {
-            // Legenda
             HStack(spacing: 20) {
-                LegendItem(color: .green.opacity(0.2), label: "Adicionado")
-                LegendItem(color: .red.opacity(0.2), label: "Removido")
-                LegendItem(color: .yellow.opacity(0.2), label: "Modificado")
+                LegendItem(color: AppTheme.addText, label: "Adicionado")
+                LegendItem(color: AppTheme.delText, label: "Removido")
+                LegendItem(color: AppTheme.modText, label: "Modificado")
             }
             .padding(.vertical, 8)
-            .background(Color(NSColor.controlBackgroundColor))
+            .background(AppTheme.surface)
 
             Divider()
 
-            // Painéis lado a lado
             HSplitView {
                 VStack(spacing: 0) {
                     Text("Original (Esquerda)")
                         .font(.headline)
+                        .foregroundColor(AppTheme.text)
                         .padding(.vertical, 4)
                         .frame(maxWidth: .infinity)
-                        .background(Color(NSColor.controlBackgroundColor))
+                        .background(AppTheme.surface2)
 
                     Divider()
 
@@ -45,9 +45,10 @@ struct DiffResultView: View {
                 VStack(spacing: 0) {
                     Text("Comparado (Direita)")
                         .font(.headline)
+                        .foregroundColor(AppTheme.text)
                         .padding(.vertical, 4)
                         .frame(maxWidth: .infinity)
-                        .background(Color(NSColor.controlBackgroundColor))
+                        .background(AppTheme.surface2)
 
                     Divider()
 
@@ -58,23 +59,6 @@ struct DiffResultView: View {
                     )
                 }
             }
-        }
-    }
-}
-
-struct LegendItem: View {
-    let color: Color
-    let label: String
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Rectangle()
-                .fill(color)
-                .frame(width: 20, height: 12)
-                .cornerRadius(2)
-
-            Text(label)
-                .font(.caption)
         }
     }
 }

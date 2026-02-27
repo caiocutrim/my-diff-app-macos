@@ -13,105 +13,32 @@ struct ContentView: View {
     @State private var detailedDiffLines: [DetailedDiffLine]?
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    @State private var showSummary = true
     @ObservedObject var fontSettings = FontSettings.shared
+
+    private var diffCount: Int {
+        detailedDiffLines?.filter { $0.type != .equal }.count ?? 0
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Toolbar com tema Dracula e controle de fonte
-            HStack {
-                Button("Comparar") {
-                    compareJSON()
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut("r", modifiers: .command)
-
-                Button("Limpar") {
-                    clearAll()
-                }
-                .keyboardShortcut("k", modifiers: .command)
-
-                Button("Formatar") {
-                    formatJSON()
-                }
-
-                Divider()
-                    .frame(height: 20)
-                    .padding(.horizontal, 4)
-
-                // Controle de tamanho de fonte
-                HStack(spacing: 8) {
-                    Button(action: { fontSettings.decrease() }) {
-                        Image(systemName: "textformat.size.smaller")
-                    }
-                    .help("Diminuir fonte (⌘-)")
-                    .keyboardShortcut("-", modifiers: .command)
-
-                    Text("\(Int(fontSettings.fontSize))pt")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(DraculaTheme.foreground)
-                        .frame(width: 35)
-
-                    Button(action: { fontSettings.increase() }) {
-                        Image(systemName: "textformat.size.larger")
-                    }
-                    .help("Aumentar fonte (⌘+)")
-                    .keyboardShortcut("+", modifiers: .command)
-
-                    Button(action: { fontSettings.reset() }) {
-                        Image(systemName: "arrow.counterclockwise")
-                    }
-                    .help("Resetar tamanho (⌘0)")
-                    .keyboardShortcut("0", modifiers: .command)
-                }
+            if detailedDiffLines != nil {
+                comparisonToolbar
+            } else {
+                editingToolbar
             }
-            .padding()
-            .background(DraculaTheme.currentLine)
-
-            Divider()
 
             if let lines = detailedDiffLines {
-                // Mostrar resultado do diff com syntax highlighting Dracula
-                DetailedDiffResultView(detailedLines: lines)
-                    .background(DraculaTheme.background)
+                DetailedDiffResultView(
+                    detailedLines: lines,
+                    showSummary: $showSummary
+                )
+                .background(AppTheme.background)
             } else {
-                // Mostrar campos de entrada com syntax highlighting em tempo real
-                HSplitView {
-                    VStack(spacing: 0) {
-                        HStack {
-                            Text("JSON Original (Esquerda)")
-                                .font(.headline)
-                                .foregroundColor(DraculaTheme.foreground)
-                            Spacer()
-                        }
-                        .padding(.vertical, 4)
-                        .padding(.horizontal, 8)
-                        .background(DraculaTheme.currentLine)
-
-                        Divider()
-
-                        JSONTextEditor(text: $leftJSON, placeholder: "Cole seu JSON aqui...")
-                    }
-                    .background(DraculaTheme.background)
-
-                    VStack(spacing: 0) {
-                        HStack {
-                            Text("JSON para Comparar (Direita)")
-                                .font(.headline)
-                                .foregroundColor(DraculaTheme.foreground)
-                            Spacer()
-                        }
-                        .padding(.vertical, 4)
-                        .padding(.horizontal, 8)
-                        .background(DraculaTheme.currentLine)
-
-                        Divider()
-
-                        JSONTextEditor(text: $rightJSON, placeholder: "Cole seu JSON aqui...")
-                    }
-                    .background(DraculaTheme.background)
-                }
-                .background(DraculaTheme.background)
+                editingPanels
             }
+
+            hiddenFontControls
         }
         .alert("Erro", isPresented: $showingAlert) {
             Button("OK", role: .cancel) {}
@@ -120,15 +47,195 @@ struct ContentView: View {
         }
     }
 
+    // MARK: - Comparison Mode Toolbar
+
+    private var comparisonToolbar: some View {
+        HStack(spacing: 8) {
+            Text("JsonDiffApp")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(AppTheme.text)
+
+            ToolbarDivider()
+
+            // Legend dots
+            HStack(spacing: 14) {
+                LegendItem(color: AppTheme.addText, label: "Adicionado")
+                LegendItem(color: AppTheme.delText, label: "Removido")
+                LegendItem(color: AppTheme.modText, label: "Modificado")
+            }
+
+            Spacer()
+
+            HStack(spacing: 8) {
+                // Compare button
+                Button(action: { compareJSON() }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.left.arrow.right")
+                            .font(.system(size: 11))
+                        Text("Comparar")
+                    }
+                }
+                .buttonStyle(GhostButtonStyle(isPrimary: true))
+                .keyboardShortcut("r", modifiers: .command)
+
+                // Back to edit
+                Button(action: { detailedDiffLines = nil; showSummary = true }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "doc.text")
+                            .font(.system(size: 11))
+                        Text("Voltar para Edição")
+                    }
+                }
+                .buttonStyle(GhostButtonStyle())
+
+                // Diff count badge
+                HStack(spacing: 6) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 10))
+                    Text("\(diffCount) diferença\(diffCount == 1 ? "" : "s") encontrada\(diffCount == 1 ? "" : "s")")
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(AppTheme.modText)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(AppTheme.modGutter)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.radiusSm)
+                        .stroke(AppTheme.modLine, lineWidth: 1)
+                )
+                .cornerRadius(AppTheme.radiusSm)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(AppTheme.surface)
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(AppTheme.border),
+            alignment: .bottom
+        )
+    }
+
+    // MARK: - Editing Mode Toolbar
+
+    private var editingToolbar: some View {
+        HStack(spacing: 8) {
+            Text("JsonDiffApp")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(AppTheme.text)
+
+            ToolbarDivider()
+
+            Text("Compare JSONs lado a lado")
+                .font(.system(size: 12))
+                .foregroundColor(AppTheme.textMuted)
+
+            Spacer()
+
+            HStack(spacing: 8) {
+                Button(action: { formatJSON() }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "text.alignleft")
+                            .font(.system(size: 11))
+                        Text("Formatar")
+                    }
+                }
+                .buttonStyle(GhostButtonStyle())
+
+                Button(action: { clearAll() }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 11))
+                        Text("Limpar")
+                    }
+                }
+                .buttonStyle(GhostButtonStyle())
+                .keyboardShortcut("k", modifiers: .command)
+
+                Button(action: { compareJSON() }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.left.arrow.right")
+                            .font(.system(size: 11))
+                        Text("Comparar")
+                    }
+                }
+                .buttonStyle(GhostButtonStyle(isPrimary: true))
+                .keyboardShortcut("r", modifiers: .command)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(AppTheme.surface)
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(AppTheme.border),
+            alignment: .bottom
+        )
+    }
+
+    // MARK: - Editing Panels
+
+    private var editingPanels: some View {
+        HSplitView {
+            VStack(spacing: 0) {
+                PaneHeaderView(
+                    icon: "doc.text",
+                    title: "Original",
+                    subtitle: "(Esquerda)",
+                    filename: "original.json"
+                )
+
+                JSONTextEditor(text: $leftJSON, placeholder: "Cole o JSON original aqui...")
+            }
+            .background(AppTheme.background)
+
+            VStack(spacing: 0) {
+                PaneHeaderView(
+                    icon: "doc.on.clipboard",
+                    title: "Comparado",
+                    subtitle: "(Direita)",
+                    filename: "comparado.json"
+                )
+
+                JSONTextEditor(text: $rightJSON, placeholder: "Cole o JSON para comparar aqui...")
+            }
+            .background(AppTheme.background)
+        }
+        .background(AppTheme.background)
+    }
+
+    // MARK: - Hidden Font Controls
+
+    private var hiddenFontControls: some View {
+        HStack(spacing: 0) {
+            Button(action: { fontSettings.decrease() }) { EmptyView() }
+                .keyboardShortcut("-", modifiers: .command)
+                .frame(width: 0, height: 0)
+                .opacity(0)
+
+            Button(action: { fontSettings.increase() }) { EmptyView() }
+                .keyboardShortcut("+", modifiers: .command)
+                .frame(width: 0, height: 0)
+                .opacity(0)
+
+            Button(action: { fontSettings.reset() }) { EmptyView() }
+                .keyboardShortcut("0", modifiers: .command)
+                .frame(width: 0, height: 0)
+                .opacity(0)
+        }
+    }
+
+    // MARK: - Actions
+
     private func compareJSON() {
-        // Formatar ambos os JSONs
         let leftResult = JSONFormatter.format(jsonString: leftJSON)
         let rightResult = JSONFormatter.format(jsonString: rightJSON)
 
         var formattedLeft: String
         var formattedRight: String
 
-        // Validar e obter JSON formatado do lado esquerdo
         switch leftResult {
         case .success(let formatted):
             formattedLeft = formatted
@@ -138,7 +245,6 @@ struct ContentView: View {
             return
         }
 
-        // Validar e obter JSON formatado do lado direito
         switch rightResult {
         case .success(let formatted):
             formattedRight = formatted
@@ -148,8 +254,8 @@ struct ContentView: View {
             return
         }
 
-        // Executar diff com character-level e syntax highlighting
         detailedDiffLines = DiffEngine.compareDetailed(left: formattedLeft, right: formattedRight)
+        showSummary = true
     }
 
     private func clearAll() {
@@ -159,7 +265,6 @@ struct ContentView: View {
     }
 
     private func formatJSON() {
-        // Formatar JSON da esquerda
         if !leftJSON.isEmpty {
             switch JSONFormatter.format(jsonString: leftJSON) {
             case .success(let formatted):
@@ -171,7 +276,6 @@ struct ContentView: View {
             }
         }
 
-        // Formatar JSON da direita
         if !rightJSON.isEmpty {
             switch JSONFormatter.format(jsonString: rightJSON) {
             case .success(let formatted):
@@ -182,6 +286,91 @@ struct ContentView: View {
                 return
             }
         }
+    }
+}
+
+// MARK: - Reusable Components
+
+struct LegendItem: View {
+    let color: Color
+    let label: String
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Circle()
+                .fill(color)
+                .frame(width: 7, height: 7)
+            Text(label)
+                .font(.system(size: 12))
+                .foregroundColor(AppTheme.textMuted)
+        }
+    }
+}
+
+struct ToolbarDivider: View {
+    var body: some View {
+        Rectangle()
+            .fill(AppTheme.border)
+            .frame(width: 1, height: 20)
+            .padding(.horizontal, 4)
+    }
+}
+
+struct PaneHeaderView: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let filename: String
+
+    var body: some View {
+        HStack {
+            HStack(spacing: 7) {
+                Image(systemName: icon)
+                    .font(.system(size: 11))
+                    .foregroundColor(AppTheme.textMuted)
+                    .opacity(0.7)
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(AppTheme.textMuted)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                Text(subtitle)
+                    .font(.system(size: 12))
+                    .foregroundColor(AppTheme.textDim)
+            }
+            Spacer()
+            Text(filename)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(AppTheme.textDim)
+        }
+        .padding(.vertical, 7)
+        .padding(.horizontal, 14)
+        .background(AppTheme.surface2)
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(AppTheme.borderSubtle),
+            alignment: .bottom
+        )
+    }
+}
+
+struct GhostButtonStyle: ButtonStyle {
+    var isPrimary = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 13, weight: .medium))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
+            .foregroundColor(isPrimary ? Color(hex: "#0d1117") : AppTheme.textMuted)
+            .background(isPrimary ? AppTheme.accent : Color.clear)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppTheme.radiusSm)
+                    .stroke(isPrimary ? AppTheme.accent : AppTheme.border, lineWidth: 1)
+            )
+            .cornerRadius(AppTheme.radiusSm)
+            .opacity(configuration.isPressed ? 0.8 : 1.0)
     }
 }
 

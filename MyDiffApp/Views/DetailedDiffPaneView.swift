@@ -18,33 +18,15 @@ struct DetailedDiffPaneView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(lines) { line in
-                        HStack(alignment: .top, spacing: 8) {
-                            // Número da linha
-                            Text("\(line.lineNumber)")
-                                .font(.system(size: CGFloat(fontSettings.fontSize) * 0.85, design: .monospaced))
-                                .foregroundColor(.secondary)
-                                .frame(width: 40, alignment: .trailing)
-                                .padding(.top, 4)
-
-                            // Conteúdo da linha com syntax highlighting Dracula
-                            let segments = showLeft ? line.leftSegments : line.rightSegments
-                            if segments.isEmpty {
-                                Text("")
-                                    .frame(height: 20)
-                            } else {
-                                Text(JSONSyntaxHighlighter.highlightSegments(segments, theme: .dracula, fontSize: CGFloat(fontSettings.fontSize)))
-                                    .font(fontSettings.swiftUIMonospacedFont)
-                                    .textSelection(.enabled)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.vertical, 2)
-                                    .padding(.horizontal, 4)
-                            }
-                        }
-                        .background(backgroundColor(for: line.type))
+                        DiffLineRowView(
+                            line: line,
+                            showLeft: showLeft,
+                            fontSize: CGFloat(fontSettings.fontSize)
+                        )
                         .id(line.lineNumber)
                     }
                 }
-                .padding()
+                .padding(.vertical, 12)
             }
             .onChange(of: scrollPosition) { newValue in
                 if let position = newValue {
@@ -55,17 +37,90 @@ struct DetailedDiffPaneView: View {
             }
         }
     }
+}
 
-    private func backgroundColor(for type: DiffLineType) -> Color {
-        switch type {
-        case .equal:
-            return DraculaTheme.background
-        case .added:
-            return DraculaTheme.diffAdded.opacity(0.15)
-        case .removed:
-            return DraculaTheme.diffRemoved.opacity(0.15)
-        case .modified:
-            return DraculaTheme.diffModified.opacity(0.15)
+struct DiffLineRowView: View {
+    let line: DetailedDiffLine
+    let showLeft: Bool
+    let fontSize: CGFloat
+
+    private var lineType: DiffLineType { line.type }
+
+    private var borderColor: Color {
+        switch lineType {
+        case .added: return AppTheme.addLine
+        case .removed: return AppTheme.delLine
+        case .modified: return AppTheme.modLine
+        case .equal: return .clear
         }
+    }
+
+    private var bgColor: Color {
+        switch lineType {
+        case .added: return AppTheme.addBg
+        case .removed: return AppTheme.delBg
+        case .modified: return AppTheme.modBg
+        case .equal: return .clear
+        }
+    }
+
+    private var gutterBgColor: Color {
+        switch lineType {
+        case .added: return AppTheme.addGutter
+        case .removed: return AppTheme.delGutter
+        case .modified: return AppTheme.modGutter
+        case .equal: return .clear
+        }
+    }
+
+    private var gutterTextColor: Color {
+        switch lineType {
+        case .added: return AppTheme.addText
+        case .removed: return AppTheme.delText
+        case .modified: return AppTheme.modText
+        case .equal: return AppTheme.textDim
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            // Left border indicator (2px)
+            if lineType != .equal {
+                Rectangle()
+                    .fill(borderColor)
+                    .frame(width: 2)
+            }
+
+            // Line number gutter
+            Text("\(line.lineNumber)")
+                .font(.system(size: fontSize * 0.85, design: .monospaced))
+                .foregroundColor(gutterTextColor)
+                .frame(width: 40, alignment: .trailing)
+                .padding(.horizontal, 8)
+                .frame(minHeight: 22)
+                .background(gutterBgColor)
+
+            // Content
+            let segments = showLeft ? line.leftSegments : line.rightSegments
+            if segments.isEmpty {
+                Text("")
+                    .frame(height: 22)
+            } else {
+                // Only apply inline character highlights for modified lines;
+                // added/removed lines already have the line-level background color.
+                Text(JSONSyntaxHighlighter.highlightSegments(
+                    segments,
+                    theme: .material,
+                    fontSize: fontSize,
+                    inlineHighlight: lineType == .modified
+                ))
+                    .font(.system(size: fontSize, design: .monospaced))
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .frame(minHeight: 22)
+            }
+        }
+        .background(bgColor)
     }
 }
