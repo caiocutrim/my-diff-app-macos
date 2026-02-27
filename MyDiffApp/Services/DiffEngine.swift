@@ -59,7 +59,8 @@ class DiffEngine {
                 result.append(DetailedDiffLine(
                     leftSegments:  [CharacterDiff(text: text, type: .unchanged)],
                     rightSegments: [CharacterDiff(text: rightLines[ri], type: .unchanged)],
-                    lineNumber: li + 1,
+                    leftLineNumber:  li + 1,
+                    rightLineNumber: ri + 1,
                     type: .equal
                 ))
                 i += 1
@@ -74,9 +75,10 @@ class DiffEngine {
                     let (ls, rs) = CharacterDiffEngine.compareStrings(
                         left: leftLines[li], right: rightLines[ri])
                     result.append(DetailedDiffLine(
-                        leftSegments: ls,
+                        leftSegments:  ls,
                         rightSegments: rs,
-                        lineNumber: li + 1,
+                        leftLineNumber:  li + 1,
+                        rightLineNumber: ri + 1,
                         type: .modified
                     ))
                     i += 2
@@ -84,7 +86,8 @@ class DiffEngine {
                     result.append(DetailedDiffLine(
                         leftSegments:  [CharacterDiff(text: leftLines[li], type: .removed)],
                         rightSegments: [],
-                        lineNumber: li + 1,
+                        leftLineNumber:  li + 1,
+                        rightLineNumber: nil,
                         type: .removed
                     ))
                     i += 1
@@ -94,7 +97,8 @@ class DiffEngine {
                 result.append(DetailedDiffLine(
                     leftSegments:  [],
                     rightSegments: [CharacterDiff(text: rightLines[ri], type: .added)],
-                    lineNumber: ri + 1,
+                    leftLineNumber:  nil,
+                    rightLineNumber: ri + 1,
                     type: .added
                 ))
                 i += 1

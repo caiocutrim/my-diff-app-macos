@@ -10,7 +10,8 @@ import SwiftUI
 struct DetailedDiffResultView: View {
     let detailedLines: [DetailedDiffLine]
     @Binding var showSummary: Bool
-    @State private var scrollPosition: Int? = nil
+    /// UUID of the row to scroll both panes to simultaneously.
+    @State private var scrollTarget: UUID? = nil
 
     private var summaryItems: [DiffSummaryItem] {
         DiffEngine.extractSummary(from: detailedLines)
@@ -27,16 +28,15 @@ struct DetailedDiffResultView: View {
                         subtitle: "(Esquerda)",
                         filename: "original.json"
                     )
-
                     DetailedDiffPaneView(
                         lines: detailedLines,
                         showLeft: true,
-                        scrollPosition: $scrollPosition
+                        scrollTarget: $scrollTarget
                     )
                     .background(AppTheme.background)
                 }
 
-                // Right pane (border-left via overlay)
+                // Right pane
                 VStack(spacing: 0) {
                     PaneHeaderView(
                         icon: "doc.on.clipboard",
@@ -44,11 +44,10 @@ struct DetailedDiffResultView: View {
                         subtitle: "(Direita)",
                         filename: "comparado.json"
                     )
-
                     DetailedDiffPaneView(
                         lines: detailedLines,
                         showLeft: false,
-                        scrollPosition: $scrollPosition
+                        scrollTarget: $scrollTarget
                     )
                     .background(AppTheme.background)
                 }

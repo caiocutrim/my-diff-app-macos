@@ -26,6 +26,9 @@ struct DetailedDiffLine: Identifiable {
     let id = UUID()
     let leftSegments: [CharacterDiff]
     let rightSegments: [CharacterDiff]
-    let lineNumber: Int
+    /// Número de linha no lado esquerdo. nil para linhas puramente adicionadas.
+    let leftLineNumber: Int?
+    /// Número de linha no lado direito. nil para linhas puramente removidas.
+    let rightLineNumber: Int?
     let type: DiffLineType
 }

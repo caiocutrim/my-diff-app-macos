@@ -10,7 +10,7 @@ import SwiftUI
 struct DetailedDiffPaneView: View {
     let lines: [DetailedDiffLine]
     let showLeft: Bool
-    @Binding var scrollPosition: Int?
+    @Binding var scrollTarget: UUID?
     @ObservedObject var fontSettings = FontSettings.shared
 
     var body: some View {
@@ -23,15 +23,15 @@ struct DetailedDiffPaneView: View {
                             showLeft: showLeft,
                             fontSize: CGFloat(fontSettings.fontSize)
                         )
-                        .id(line.lineNumber)
+                        .id(line.id)
                     }
                 }
                 .padding(.vertical, 12)
             }
-            .onChange(of: scrollPosition) { newValue in
-                if let position = newValue {
-                    withAnimation {
-                        proxy.scrollTo(position, anchor: .top)
+            .onChange(of: scrollTarget) { target in
+                if let id = target {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        proxy.scrollTo(id, anchor: .top)
                     }
                 }
             }
@@ -46,79 +46,94 @@ struct DiffLineRowView: View {
 
     private var lineType: DiffLineType { line.type }
 
+    // Gutter & border colors per type
     private var borderColor: Color {
         switch lineType {
-        case .added: return AppTheme.addLine
-        case .removed: return AppTheme.delLine
+        case .added:    return AppTheme.addLine
+        case .removed:  return AppTheme.delLine
         case .modified: return AppTheme.modLine
-        case .equal: return .clear
+        case .equal:    return .clear
         }
     }
 
     private var bgColor: Color {
         switch lineType {
-        case .added: return AppTheme.addBg
-        case .removed: return AppTheme.delBg
+        case .added:    return AppTheme.addBg
+        case .removed:  return AppTheme.delBg
         case .modified: return AppTheme.modBg
-        case .equal: return .clear
+        case .equal:    return .clear
         }
     }
 
-    private var gutterBgColor: Color {
+    private var gutterBg: Color {
         switch lineType {
-        case .added: return AppTheme.addGutter
-        case .removed: return AppTheme.delGutter
+        case .added:    return AppTheme.addGutter
+        case .removed:  return AppTheme.delGutter
         case .modified: return AppTheme.modGutter
-        case .equal: return .clear
+        case .equal:    return .clear
         }
     }
 
-    private var gutterTextColor: Color {
+    private var gutterFg: Color {
         switch lineType {
-        case .added: return AppTheme.addText
-        case .removed: return AppTheme.delText
+        case .added:    return AppTheme.addText
+        case .removed:  return AppTheme.delText
         case .modified: return AppTheme.modText
-        case .equal: return AppTheme.textDim
+        case .equal:    return AppTheme.textDim
         }
+    }
+
+    /// Line number to show for this pane (nil = placeholder gutter)
+    private var lineNumber: Int? {
+        showLeft ? line.leftLineNumber : line.rightLineNumber
     }
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
-            // Left border indicator (2px)
+            // 2px left border for non-equal lines
             if lineType != .equal {
                 Rectangle()
                     .fill(borderColor)
                     .frame(width: 2)
             }
 
-            // Line number gutter
-            Text("\(line.lineNumber)")
-                .font(.system(size: fontSize * 0.85, design: .monospaced))
-                .foregroundColor(gutterTextColor)
-                .frame(width: 40, alignment: .trailing)
-                .padding(.horizontal, 8)
-                .frame(minHeight: 22)
-                .background(gutterBgColor)
+            // Gutter — number when the line exists on this side, blank otherwise
+            Group {
+                if let num = lineNumber {
+                    Text("\(num)")
+                        .foregroundColor(gutterFg)
+                } else {
+                    // Placeholder: line exists on the other side only
+                    Text(" ")
+                }
+            }
+            .font(.system(size: fontSize * 0.85, design: .monospaced))
+            .frame(width: 40, alignment: .trailing)
+            .padding(.horizontal, 8)
+            .frame(minHeight: 22)
+            .background(gutterBg)
 
             // Content
             let segments = showLeft ? line.leftSegments : line.rightSegments
             if segments.isEmpty {
-                Text("")
-                    .frame(height: 22)
+                // Empty placeholder row (line only exists on the other side)
+                Text(" ")
+                    .font(.system(size: fontSize, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .frame(minHeight: 22)
             } else {
-                // Only apply inline character highlights for modified lines;
-                // added/removed lines already have the line-level background color.
                 Text(JSONSyntaxHighlighter.highlightSegments(
                     segments,
                     theme: .material,
                     fontSize: fontSize,
                     inlineHighlight: lineType == .modified
                 ))
-                    .font(.system(size: fontSize, design: .monospaced))
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 16)
-                    .frame(minHeight: 22)
+                .font(.system(size: fontSize, design: .monospaced))
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .frame(minHeight: 22)
             }
         }
         .background(bgColor)

@@ -141,27 +141,40 @@ struct SummaryItemRow: View {
 
             Spacer()
 
-            // Values
-            if item.changeType == .modified {
+            // Values — only show what's available
+            switch item.changeType {
+            case .modified:
                 HStack(spacing: 6) {
-                    Text(item.oldValue ?? "")
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(AppTheme.delText)
+                    if let old = item.oldValue {
+                        Text(old)
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AppTheme.delText)
+                            .lineLimit(1)
+                    }
                     Text("\u{2192}")
                         .font(.system(size: 12))
                         .foregroundColor(AppTheme.textDim)
-                    Text(item.newValue ?? "")
+                    if let new = item.newValue {
+                        Text(new)
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AppTheme.addText)
+                            .lineLimit(1)
+                    }
+                }
+            case .removed:
+                if let old = item.oldValue {
+                    Text(old)
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(AppTheme.delText)
+                        .lineLimit(1)
+                }
+            case .added:
+                if let new = item.newValue {
+                    Text(new)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundColor(AppTheme.addText)
+                        .lineLimit(1)
                 }
-            } else if item.changeType == .removed {
-                Text(item.oldValue ?? "")
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundColor(AppTheme.delText)
-            } else {
-                Text(item.newValue ?? "")
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundColor(AppTheme.addText)
             }
 
             // Chip badge
