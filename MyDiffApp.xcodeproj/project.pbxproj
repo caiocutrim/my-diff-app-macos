@@ -18,6 +18,7 @@
 		A10000001000000000000009 /* CharacterDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000009 /* CharacterDiff.swift */; };
 		A10000001000000000000010 /* CharacterDiffEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000010 /* CharacterDiffEngine.swift */; };
 		A10000001000000000000011 /* JSONSyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000011 /* JSONSyntaxHighlighter.swift */; };
+		A10000001000000000000020 /* JSONStructureAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000020 /* JSONStructureAnalyzer.swift */; };
 		A10000001000000000000012 /* DetailedDiffPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000012 /* DetailedDiffPaneView.swift */; };
 		A10000001000000000000013 /* DetailedDiffResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000013 /* DetailedDiffResultView.swift */; };
 		A10000001000000000000014 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000001000000000000014 /* AppTheme.swift */; };
@@ -41,6 +42,7 @@
 		A20000001000000000000009 /* CharacterDiff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterDiff.swift; sourceTree = "<group>"; };
 		A20000001000000000000010 /* CharacterDiffEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterDiffEngine.swift; sourceTree = "<group>"; };
 		A20000001000000000000011 /* JSONSyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONSyntaxHighlighter.swift; sourceTree = "<group>"; };
+		A20000001000000000000020 /* JSONStructureAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONStructureAnalyzer.swift; sourceTree = "<group>"; };
 		A20000001000000000000012 /* DetailedDiffPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailedDiffPaneView.swift; sourceTree = "<group>"; };
 		A20000001000000000000013 /* DetailedDiffResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailedDiffResultView.swift; sourceTree = "<group>"; };
 		A20000001000000000000014 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 				A20000001000000000000008 /* DiffEngine.swift */,
 				A20000001000000000000010 /* CharacterDiffEngine.swift */,
 				A20000001000000000000011 /* JSONSyntaxHighlighter.swift */,
+				A20000001000000000000020 /* JSONStructureAnalyzer.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -216,6 +219,7 @@
 				A10000001000000000000009 /* CharacterDiff.swift in Sources */,
 				A10000001000000000000010 /* CharacterDiffEngine.swift in Sources */,
 				A10000001000000000000011 /* JSONSyntaxHighlighter.swift in Sources */,
+				A10000001000000000000020 /* JSONStructureAnalyzer.swift in Sources */,
 				A10000001000000000000012 /* DetailedDiffPaneView.swift in Sources */,
 				A10000001000000000000013 /* DetailedDiffResultView.swift in Sources */,
 				A10000001000000000000014 /* AppTheme.swift in Sources */,

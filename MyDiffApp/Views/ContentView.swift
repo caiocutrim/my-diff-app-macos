@@ -13,6 +13,8 @@ struct ContentView: View {
     @State private var detailedDiffLines: [DetailedDiffLine]?
     @State private var leftError: JSONError? = nil
     @State private var rightError: JSONError? = nil
+    @State private var pendingFormattedLeft: String? = nil
+    @State private var pendingFormattedRight: String? = nil
     @State private var showSummary = true
     @ObservedObject var fontSettings = FontSettings.shared
 
@@ -263,16 +265,49 @@ struct ContentView: View {
             return
         }
 
-        detailedDiffLines = DiffEngine.compareDetailed(left: formattedLeft, right: formattedRight)
+        // Structure check — present native NSAlert with warning icon
+        if let warning = JSONStructureAnalyzer.analyze(left: formattedLeft, right: formattedRight) {
+            pendingFormattedLeft  = formattedLeft
+            pendingFormattedRight = formattedRight
+            presentStructureWarning(message: warning.message)
+            return
+        }
+
+        runDiff(left: formattedLeft, right: formattedRight)
+    }
+
+    private func presentStructureWarning(message: String) {
+        let alert = NSAlert()
+        alert.messageText     = "Estruturas muito diferentes"
+        alert.informativeText = message
+        alert.alertStyle      = .warning
+        alert.icon            = NSImage(named: NSImage.cautionName)
+        alert.addButton(withTitle: "Comparar assim mesmo")
+        alert.addButton(withTitle: "Cancelar")
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn,
+           let l = pendingFormattedLeft,
+           let r = pendingFormattedRight {
+            runDiff(left: l, right: r)
+        }
+        pendingFormattedLeft  = nil
+        pendingFormattedRight = nil
+    }
+
+    private func runDiff(left: String, right: String) {
+        detailedDiffLines = DiffEngine.compareDetailed(left: left, right: right)
         showSummary = true
     }
 
     private func clearAll() {
         leftJSON = ""
         rightJSON = ""
-        detailedDiffLines = nil
-        leftError  = nil
-        rightError = nil
+        detailedDiffLines     = nil
+        leftError             = nil
+        rightError            = nil
+        pendingFormattedLeft  = nil
+        pendingFormattedRight = nil
     }
 
     private func formatJSON() {
