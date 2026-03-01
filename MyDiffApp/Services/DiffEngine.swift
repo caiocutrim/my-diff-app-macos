@@ -132,6 +132,7 @@ class DiffEngine {
             }
 
             items.append(DiffSummaryItem(
+                lineID:    line.id,
                 fieldName: fieldName,
                 oldValue:  leftVal  ?? (leftText.isEmpty  ? nil : leftText),
                 newValue:  rightVal ?? (rightText.isEmpty ? nil : rightText),

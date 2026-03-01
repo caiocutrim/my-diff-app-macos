@@ -10,6 +10,7 @@ import SwiftUI
 struct DiffSummaryView: View {
     let items: [DiffSummaryItem]
     @Binding var isVisible: Bool
+    var onScrollTo: (UUID) -> Void = { _ in }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -71,7 +72,7 @@ struct DiffSummaryView: View {
             ScrollView {
                 VStack(spacing: 6) {
                     ForEach(items) { item in
-                        SummaryItemRow(item: item)
+                        SummaryItemRow(item: item, onTap: { onScrollTo(item.lineID) })
                     }
                 }
                 .padding(.horizontal, 16)
@@ -86,6 +87,8 @@ struct DiffSummaryView: View {
 
 struct SummaryItemRow: View {
     let item: DiffSummaryItem
+    var onTap: () -> Void = {}
+    @State private var isHovered = false
 
     private var chipColor: Color {
         switch item.changeType {
@@ -192,11 +195,17 @@ struct SummaryItemRow: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
-        .background(AppTheme.surface2)
+        .background(isHovered ? AppTheme.surface2.opacity(1.6) : AppTheme.surface2)
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.radiusSm)
-                .stroke(AppTheme.borderSubtle, lineWidth: 1)
+                .stroke(isHovered ? AppTheme.border : AppTheme.borderSubtle, lineWidth: 1)
         )
         .cornerRadius(AppTheme.radiusSm)
+        .contentShape(Rectangle())
+        .onTapGesture { onTap() }
+        .onHover { hovering in
+            isHovered = hovering
+            if hovering { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+        }
     }
 }

@@ -7,10 +7,21 @@
 
 import SwiftUI
 
+// MARK: - Highlight request
+
+/// Wraps a lineID + a nonce so .onChange fires even when the same line is clicked twice.
+struct HighlightRequest: Equatable {
+    let lineID: UUID
+    let nonce  = UUID()
+}
+
+// MARK: - Pane
+
 struct DetailedDiffPaneView: View {
     let lines: [DetailedDiffLine]
     let showLeft: Bool
     @Binding var scrollTarget: UUID?
+    var highlightRequest: HighlightRequest? = nil
     @ObservedObject var fontSettings = FontSettings.shared
 
     var body: some View {
@@ -21,7 +32,8 @@ struct DetailedDiffPaneView: View {
                         DiffLineRowView(
                             line: line,
                             showLeft: showLeft,
-                            fontSize: CGFloat(fontSettings.fontSize)
+                            fontSize: CGFloat(fontSettings.fontSize),
+                            highlightRequest: highlightRequest
                         )
                         .id(line.id)
                     }
@@ -30,8 +42,8 @@ struct DetailedDiffPaneView: View {
             }
             .onChange(of: scrollTarget) { target in
                 if let id = target {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        proxy.scrollTo(id, anchor: .top)
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        proxy.scrollTo(id, anchor: .center)
                     }
                 }
             }
@@ -39,14 +51,18 @@ struct DetailedDiffPaneView: View {
     }
 }
 
+// MARK: - Row
+
 struct DiffLineRowView: View {
     let line: DetailedDiffLine
     let showLeft: Bool
     let fontSize: CGFloat
+    var highlightRequest: HighlightRequest? = nil
+
+    @State private var flashOpacity: Double = 0
 
     private var lineType: DiffLineType { line.type }
 
-    // Gutter & border colors per type
     private var borderColor: Color {
         switch lineType {
         case .added:    return AppTheme.addLine
@@ -83,7 +99,6 @@ struct DiffLineRowView: View {
         }
     }
 
-    /// Line number to show for this pane (nil = placeholder gutter)
     private var lineNumber: Int? {
         showLeft ? line.leftLineNumber : line.rightLineNumber
     }
@@ -97,13 +112,11 @@ struct DiffLineRowView: View {
                     .frame(width: 2)
             }
 
-            // Gutter — number when the line exists on this side, blank otherwise
+            // Gutter
             Group {
                 if let num = lineNumber {
-                    Text("\(num)")
-                        .foregroundColor(gutterFg)
+                    Text("\(num)").foregroundColor(gutterFg)
                 } else {
-                    // Placeholder: line exists on the other side only
                     Text(" ")
                 }
             }
@@ -116,7 +129,6 @@ struct DiffLineRowView: View {
             // Content
             let segments = showLeft ? line.leftSegments : line.rightSegments
             if segments.isEmpty {
-                // Empty placeholder row (line only exists on the other side)
                 Text(" ")
                     .font(.system(size: fontSize, design: .monospaced))
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -137,5 +149,29 @@ struct DiffLineRowView: View {
             }
         }
         .background(bgColor)
+        // Flash overlay — white pulse when this row is the scroll target
+        .overlay(
+            Rectangle()
+                .fill(Color.white.opacity(flashOpacity))
+                .allowsHitTesting(false)
+        )
+        .onChange(of: highlightRequest) { req in
+            guard req?.lineID == line.id else { return }
+            triggerFlash()
+        }
+    }
+
+    private func triggerFlash() {
+        flashOpacity = 0
+        // Fase 1 — fade in rápido
+        withAnimation(.easeIn(duration: 0.18)) {
+            flashOpacity = 0.30
+        }
+        // Fase 2 — fade out lento após o pico
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            withAnimation(.easeOut(duration: 1.1)) {
+                flashOpacity = 0
+            }
+        }
     }
 }

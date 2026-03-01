@@ -15,6 +15,7 @@ enum DiffChangeType {
 
 struct DiffSummaryItem: Identifiable {
     let id = UUID()
+    let lineID: UUID        // id do DetailedDiffLine correspondente — usado para scroll
     let fieldName: String
     let oldValue: String?
     let newValue: String?
