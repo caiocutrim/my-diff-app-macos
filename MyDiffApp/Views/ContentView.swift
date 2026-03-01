@@ -11,8 +11,8 @@ struct ContentView: View {
     @State private var leftJSON: String = ""
     @State private var rightJSON: String = ""
     @State private var detailedDiffLines: [DetailedDiffLine]?
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
+    @State private var leftError: JSONError? = nil
+    @State private var rightError: JSONError? = nil
     @State private var showSummary = true
     @ObservedObject var fontSettings = FontSettings.shared
 
@@ -39,11 +39,6 @@ struct ContentView: View {
             }
 
             hiddenFontControls
-        }
-        .alert("Erro", isPresented: $showingAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(alertMessage)
         }
     }
 
@@ -186,10 +181,17 @@ struct ContentView: View {
                     subtitle: "(Esquerda)",
                     filename: "original.json"
                 )
-
-                JSONTextEditor(text: $leftJSON, placeholder: "Cole o JSON original aqui...")
+                if let err = leftError {
+                    ErrorBannerView(error: err)
+                }
+                JSONTextEditor(
+                    text: $leftJSON,
+                    placeholder: "Cole o JSON original aqui...",
+                    errorLocation: leftError?.location
+                )
             }
             .background(AppTheme.background)
+            .onChange(of: leftJSON) { _ in leftError = nil }
 
             VStack(spacing: 0) {
                 PaneHeaderView(
@@ -198,10 +200,17 @@ struct ContentView: View {
                     subtitle: "(Direita)",
                     filename: "comparado.json"
                 )
-
-                JSONTextEditor(text: $rightJSON, placeholder: "Cole o JSON para comparar aqui...")
+                if let err = rightError {
+                    ErrorBannerView(error: err)
+                }
+                JSONTextEditor(
+                    text: $rightJSON,
+                    placeholder: "Cole o JSON para comparar aqui...",
+                    errorLocation: rightError?.location
+                )
             }
             .background(AppTheme.background)
+            .onChange(of: rightJSON) { _ in rightError = nil }
         }
         .background(AppTheme.background)
     }
@@ -230,7 +239,7 @@ struct ContentView: View {
     // MARK: - Actions
 
     private func compareJSON() {
-        let leftResult = JSONFormatter.format(jsonString: leftJSON)
+        let leftResult  = JSONFormatter.format(jsonString: leftJSON)
         let rightResult = JSONFormatter.format(jsonString: rightJSON)
 
         var formattedLeft: String
@@ -239,18 +248,18 @@ struct ContentView: View {
         switch leftResult {
         case .success(let formatted):
             formattedLeft = formatted
+            leftError = nil
         case .failure(let error):
-            alertMessage = "Erro no JSON da esquerda: \(error.localizedDescription)"
-            showingAlert = true
+            leftError = error
             return
         }
 
         switch rightResult {
         case .success(let formatted):
             formattedRight = formatted
+            rightError = nil
         case .failure(let error):
-            alertMessage = "Erro no JSON da direita: \(error.localizedDescription)"
-            showingAlert = true
+            rightError = error
             return
         }
 
@@ -262,16 +271,18 @@ struct ContentView: View {
         leftJSON = ""
         rightJSON = ""
         detailedDiffLines = nil
+        leftError  = nil
+        rightError = nil
     }
 
     private func formatJSON() {
         if !leftJSON.isEmpty {
             switch JSONFormatter.format(jsonString: leftJSON) {
             case .success(let formatted):
-                leftJSON = formatted
+                leftJSON   = formatted
+                leftError  = nil
             case .failure(let error):
-                alertMessage = "Erro ao formatar JSON da esquerda: \(error.localizedDescription)"
-                showingAlert = true
+                leftError = error
                 return
             }
         }
@@ -279,10 +290,10 @@ struct ContentView: View {
         if !rightJSON.isEmpty {
             switch JSONFormatter.format(jsonString: rightJSON) {
             case .success(let formatted):
-                rightJSON = formatted
+                rightJSON  = formatted
+                rightError = nil
             case .failure(let error):
-                alertMessage = "Erro ao formatar JSON da direita: \(error.localizedDescription)"
-                showingAlert = true
+                rightError = error
                 return
             }
         }
@@ -371,6 +382,32 @@ struct GhostButtonStyle: ButtonStyle {
             )
             .cornerRadius(AppTheme.radiusSm)
             .opacity(configuration.isPressed ? 0.8 : 1.0)
+    }
+}
+
+struct ErrorBannerView: View {
+    let error: JSONError
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "xmark.circle.fill")
+                .font(.system(size: 12))
+                .foregroundColor(AppTheme.delText)
+            Text(error.localizedDescription)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundColor(AppTheme.delText)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(AppTheme.delBg)
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(AppTheme.delLine),
+            alignment: .bottom
+        )
     }
 }
 
